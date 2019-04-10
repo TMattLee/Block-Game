@@ -124,8 +124,10 @@ export const app = {
 		let shape = app.currentShape.getShape();
 		let rows = shape.length;
 		let cols = shape[0].length;
-		let newPosition = app.currentShape.getPosition();
-		
+		let newPosition = {
+			y:app.currentShape.getPosition().y,
+			x:app.currentShape.getPosition().x,
+		}
 		switch(input){
 			
 			case 'ArrowUp':
@@ -133,19 +135,23 @@ export const app = {
 				break;
 			
 			case 'ArrowLeft':
-				if(newPosition.x > 0 && app.canMoveLeft(newPosition)) newPosition.x--;
+				if(app.canMoveLeft(newPosition)) newPosition.x--;
 				break;
 				
 			case 'ArrowRight':
-				if(newPosition.x < app.gridSizeX - cols && app.canMoveRight(newPosition)) newPosition.x++;
+				if(app.canMoveRight(newPosition)) newPosition.x++;
 				break;
 				
 			default:
 				break;
 		}
 		
-		while(app.currentShape.getShape()[0].length + newPosition.x > app.gridSizeX){
-			newPosition.x--;
+		for(let y = 0; y < rows; y++){
+			for(let x = 0; x < cols; x++){
+				let i = y + newPosition.y;
+				let j = x + newPosition.x;
+				if(shape[y][x] == 1 && j >= app.gridSizeX) newPosition--;
+			}
 		}
 		
 		app.currentShape.currentPosition = Object.assign({}, newPosition);
@@ -153,77 +159,69 @@ export const app = {
 	
 	canMoveLeft: (currentPosition) => {
 		let shape = app.currentShape.getShape();
-		let ylimit = currentPosition.y + shape.length;
-		let xlimit = currentPosition.x + shape[0].length;
-	
 		
-		for(let i = currentPosition.y; (i < app.gridSizeY) && (i < ylimit); i++){
-			if(app.gridCollision[i][currentPosition.x - 1] == 1 && shape[i - currentPosition.y][0] == 1) return false;
+		for(let y = 0; y < shape.length; y++){
+			for(let x = 0; x < shape[0].length; x++){
+				let i = y + currentPosition.y;
+				let j = x + currentPosition.x;
+				if(shape[y][x] == 1 && j - 1 < 0) return false;
+				if(shape[y][x] == 1 && app.gridCollision[i][j - 1] == 1) return false;
+			}
 		}
 		return true;
 	},
 	
 	canMoveRight: (currentPosition) => {
 		let shape = app.currentShape.getShape();
-		let ylimit = currentPosition.y + shape.length;
-		let xlimit = currentPosition.x + shape[0].length;
-	
-		let xlen = shape[0].length - 1;
-		//let ylen = shape[0].length - 1;
-
-		for(let i = currentPosition.y; (i < app.gridSizeY) && (i < ylimit); i++){
-			for(let j = currentPosition.x; (j <app.gridSizeX) && (j < xlimit); j++){
-				if(shape[i - currentPosition.y][j - currentPosition.x] == 1 && app.gridCollision[i][j+1] == 1) return false;
+		
+		for(let y = 0; y < shape.length; y++){
+			for(let x = 0; x < shape[0].length; x++){
+				let i = y + currentPosition.y;
+				let j = x + currentPosition.x;
+				if(shape[y][x] == 1 && j + 1 >= app.gridSizeX) return false;
+				if(shape[y][x] == 1 && app.gridCollision[i][j + 1] == 1) return false;
 			}
 		}
+		
 		return true;
 	},
 	
 	rotateShape: () => {
-		let nextRotation = null
 		
-		switch(app.currentRotation){
-			case 'UP':
-				nextRotation = 'RIGHT';
-				break;
-				
-			case 'RIGHT':
-				nextRotation = 'DOWN';
-				break;
-				
-			case 'DOWN':
-				nextRotation = 'LEFT';
-				break;
-				
-			case 'LEFT':
-				nextRotation = 'UP';
-				break;
-				
-			default:
-				break;
-			
-		}
-		
-		
-		if(app.canRotate(nextRotation) ) app.currentRotation = nextRotation;
-	},
-	
-	canRotate(direction){
-		
+		app.currentShape.rotate();
 		let shape = app.currentShape.getShape();
+		
 		let rows = shape.length;
 		let cols = shape[0].length;
 		
 		const { currentPosition } = app.currentShape;
 		
-		for(let i = currentPosition.y; i < currentPosition.y + rows; i++){
-			for(let j = currentPosition.x; j < currentPosition.x + cols; j++){
-				if(i >= app.gridSizeY) return false;
-				if(j >= app.gridSizeX) return false;
-				if(app.gridCollision[i][j] == 1 && shape[i - currentPosition.y][j - currentPosition.x] == 1	) return false;
+		for(let y = 0; y < shape.length; y++){
+			
+			for(let x = 0; x < shape[0].length; x++){
+				
+				let i = y + currentPosition.y;
+				
+				let j = x + currentPosition.x;
+				
+				if(shape[y][x] == 1 && (i >= app.gridSizeY || j >= app.gridSizeX) ) {
+					app.currentShape.undoRotate();
+					return;
+				}
+				
+				if(shape[y][x] == 1 && (j < 0) ) {
+					app.currentShape.undoRotate();
+					return;
+				}
+				
+				if(app.gridCollision[i][j] == 1 && shape[y][x] == 1) {
+					app.currentShape.undoRotate();
+					return;
+				}
+				
 			}
+			
 		}
-		return true;	
 	},
 	
 	checkForCollision: () => {
@@ -236,15 +234,6 @@ export const app = {
 		if(app.collidedWithFloor(currentPosition.y, currentPosition.x,shape) || app.checkObjectCollsion(currentPosition.y, currentPosition.x)){
 			app.handleCollision(currentPosition.y,currentPosition.x);
 		}
-		
-		/*for(let i = currentPosition.y; i < app.gridSizeY; i++){
-			for(let j = currentPosition.x; j < app.gridSizeX; j++){
-				if(app.collidedWithFloor(currentPosition.y, currentPosition.x,shape) || app.checkObjectCollsion(currentPosition.y, currentPosition.x)){
-					app.handleCollision(currentPosition.y,currentPosition.x);
-				}
-			}
-		}*/
-		
 	},
 	
 	collidedWithFloor: (y, x, shape) => {

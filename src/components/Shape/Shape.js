@@ -6,9 +6,10 @@ class Shape {
 		s:{
 			color: 'RED',
 			START:[
+				[0,0,0],
 				[0,1,1],
 				[1,1,0],
-				[0,0,0],
+				
 			],
 		},
 		z:{
@@ -24,9 +25,9 @@ class Shape {
 		L:{
 			color: 'GREEN',
 			START:[
-				[1,0,0],	
-				[1,0,0],	
-				[1,1,0],	
+				[0,1,0],	
+				[0,1,0],	
+				[0,1,1],	
 			],
 		
 		},
@@ -60,10 +61,10 @@ class Shape {
 		l:{
 			color: 'YELLOW',
 			START:[
-				[1,0,0,0],
-				[1,0,0,0],
-				[1,0,0,0],
-				[1,0,0,0]
+				[0,1,0,0],
+				[0,1,0,0],
+				[0,1,0,0],
+				[0,1,0,0]
 			],
 			
 		}
@@ -75,6 +76,7 @@ class Shape {
 		this.shape = this.shapes[this.type]['START'];
 		this.color = this.shapes[this.type].color;
 		this.canControl = true;
+		this.isRotated = false;
 		this.currentPosition = {
 			x:4,
 			y:0
@@ -82,24 +84,124 @@ class Shape {
 	}
 	
 	rotate(){
-		this.rotateClockwise();
+		switch(this.type){
+			
+			case 'T':
+				this.rotateClockwise();
+				break;
+			
+			case 'j':
+				this.rotateClockwise();
+				break;
+				
+			case 'L':
+				this.rotateClockwise();
+				break;
+				
+			case 'o':
+				break;
+				
+			case 'l':
+				if(this.isRotated) {
+					this.rotateAntiClockwise()
+				} else {
+					this.rotateClockwise();
+				}
+				this.isRotated = !this.isRotated;
+				break;
+			
+			case 's':
+				if(this.isRotated) {
+					this.rotateAntiClockwise()
+				} else {
+					this.rotateClockwise();
+				}
+				this.isRotated = !this.isRotated;
+				break;
+				
+			case 'z':
+				if(this.isRotated) {
+					this.rotateAntiClockwise()
+				} else {
+					this.rotateClockwise();
+				}
+				this.isRotated = !this.isRotated;
+				break;
+			
+			default:
+				break;
+		}
+			
+	}
+	
+	undoRotate(){
+		switch(this.type){
+			
+			case 'T':
+				this.rotateAntiClockwise();
+				break;
+				
+			case 'j':
+				this.rotateAntiClockwise();
+				break;
+			
+			case 'L':
+				this.rotateAntiClockwise();
+				break;
+				
+			case 'l':
+				if(this.isRotated) {
+					this.rotateAntiClockwise()
+				} else {
+					this.rotateClockwise();
+				}
+				this.isRotated = !this.isRotated;
+				break;
+			
+			case 's':
+				if(this.isRotated) {
+					this.rotateAntiClockwise()
+				} else {
+					this.rotateClockwise();
+				}
+				this.isRotated = !this.isRotated;
+				break;
+				
+			case 'z':
+				if(this.isRotated) {
+					this.rotateAntiClockwise()
+				} else {
+					this.rotateClockwise();
+				}
+				this.isRotated = !this.isRotated;
+				break;
+			
+				
+			case 'o':
+				break;
+			
+			default:
+				break;
+		}
 	}
 	
 	rotateClockwise(){
-		let n = this.shape.legnth;
+		this.isRotated = false;
+		let n = this.shape.length;
 		for(let i = 0; i < n /2; i++){
 			for(let j = i; j < n - 1 -i; j++){
 				let temp = this.shape[i][j];
 				this.shape[i][j] = this.shape[n - 1 - j][i];
-				this.shape[n - 1 -j][i] = this.shape[n - 1 - i][n -  1- j];
-				this.shape[n - 1 - i][n -  1- j] = this.shape[j][n - 1 -i];
+				this.shape[n - 1 -j][i] = this.shape[n -  1 - i][n - 1 - j];
+				this.shape[n -  1 - i][n - 1 - j] = this.shape[j][n - 1 -i];
 				this.shape[j][n - 1 -i] = temp;
 			}
 		}
 	}
 	
 	rotateAntiClockwise(){
-		let n = this.shape.legnth;
+		this.isRotated = true;
+		let n = this.shape.length;
 		for(let i = 0; i < n /2; i++){
 			for(let j = i; j < n - 1 -i; j++){
 				let temp = this.shape[i][j];
